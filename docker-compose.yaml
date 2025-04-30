@@ -1,91 +1,90 @@
-version: '3.9'
+version: "3.9"
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: steam_postgres
-    restart: always
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: steamdb
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    postgres:
+        image: postgres:15
+        container_name: steam_postgres
+        restart: always
+        environment:
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: steamdb
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
 
-  airflow:
-    image: apache/airflow:2.7.3
-    container_name: steam_airflow
-    restart: always
-    depends_on:
-      - postgres
-    environment:
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:password@postgres:5432/steamdb
-      AIRFLOW__CORE_LOAD_EXAMPLES: "false"
-    volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - ./airflow/logs:/opt/airflow/logs
-      - ./airflow/plugins:/opt/airflow/plugins
-    ports:
-      - "8080:8080"
-    healthcheck:
-      test: ["CMD-SHELL", "[ -f /opt/airflow/airflow-webserver.pid ]"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    command: >
-      bash -c "
-        airflow db init &&
-        airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com &&
-        airflow webserver
-      "
+    airflow:
+        image: apache/airflow:2.7.3
+        container_name: steam_airflow
+        restart: always
+        depends_on:
+            - postgres
+        environment:
+            AIRFLOW__CORE__EXECUTOR: LocalExecutor
+            AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:password@postgres:5432/steamdb
+            AIRFLOW__CORE_LOAD_EXAMPLES: "false"
+        volumes:
+            - ./airflow/dags:/opt/airflow/dags
+            - ./airflow/logs:/opt/airflow/logs
+            - ./airflow/plugins:/opt/airflow/plugins
+        ports:
+            - "8080:8080"
+        healthcheck:
+            test: ["CMD-SHELL", "[ -f /opt/airflow/airflow-webserver.pid ]"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+        command: >
+            bash -c "
+              airflow db init &&
+              airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com &&
+              airflow webserver
+            "
 
-  airflow_scheduler:
-    image: apache/airflow:2.7.3
-    container_name: steam_airflow_scheduler
-    restart: always
-    depends_on:
-      airflow:
-        condition: service_healthy
-    environment:
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:password@postgres:5432/steamdb
-    volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - ./airflow/logs:/opt/airflow/logs
-      - ./airflow/plugins:/opt/airflow/plugins
-    command: airflow scheduler
+    airflow_scheduler:
+        image: apache/airflow:2.7.3
+        container_name: steam_airflow_scheduler
+        restart: always
+        depends_on:
+            airflow:
+                condition: service_healthy
+        environment:
+            AIRFLOW__CORE__EXECUTOR: LocalExecutor
+            AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:password@postgres:5432/steamdb
+        volumes:
+            - ./airflow/dags:/opt/airflow/dags
+            - ./airflow/logs:/opt/airflow/logs
+            - ./airflow/plugins:/opt/airflow/plugins
+        command: airflow scheduler
 
-  server:
-    build: ./server
-    container_name: steam_server
-    restart: always
-    ports:
-      - "3000:3000"
-    volumes:
-      - /app/node_modules
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://user:password@postgres:5432/steamdb
-    depends_on:
-      - postgres
+    server:
+        build: ./server
+        container_name: steam_server
+        restart: always
+        ports:
+            - "3000:3000"
+        volumes:
+            - /app/node_modules
+        environment:
+            - NODE_ENV=development
+            - DATABASE_URL=postgresql://user:password@postgres:5432/steamdb
+        depends_on:
+            - postgres
 
-  client:
-    build: ./client
-    container_name: steam_client
-    restart: always
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./client:/app
-      - /app/node_modules
-    environment:
-      - NODE_ENV=development
-      - VITE_API_URL=http://localhost:3000
-    depends_on:
-      - server
+    client:
+        build: ./client
+        container_name: steam_client
+        restart: always
+        ports:
+            - "5173:5173"
+        volumes:
+            - ./client:/app
+            - /app/node_modules
+        environment:
+            - NODE_ENV=development
+        depends_on:
+            - server
 
 volumes:
-  pgdata:
+    pgdata:
