@@ -1,0 +1,118 @@
+# General
+.DS_Store
+*.log
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+*.tmp
+*~
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Node.js
+node_modules/
+dist/
+build/
+.cache/
+.serverless/
+.next/
+.nuxt/
+.vuepress/dist/
+
+# TypeScript
+*.tsbuildinfo
+
+# React
+.eslintcache
+*.css.d.ts
+.nextflow/
+out/
+.next/
+
+# Airflow
+airflow/logs/
+airflow/plugins/
+airflow/__pycache__/
+airflow/airflow-webserver.pid
+airflow/airflow.cfg
+airflow/webserver_config.py
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+pip-log.txt
+pip-delete-this-directory.txt
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Database
+*.db
+*.sqlite
+*.sql
+*.dump
+
+# Docker
+docker-compose.override.yml
+docker-compose.yml.version
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# System Files
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Mac
+*.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+[Tt]humbs.db
+Desktop.ini
