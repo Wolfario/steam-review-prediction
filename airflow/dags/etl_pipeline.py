@@ -42,10 +42,9 @@ def etl_steam_games():
         engine = create_engine(os.getenv("DATABASE_URL", "postgresql://user:password@postgres:5432/steamdb"))
         df = pd.read_csv(transformed_path)
         df.to_sql("steam_games", con=engine, if_exists="replace", index=False)
-        return [TMP_PATH_RAW, TMP_PATH_TRANSFORMED]
 
     raw_csv = extract()
     cleaned_csv = transform(raw_csv)
-    paths_to_delete = load(cleaned_csv)
+    load(cleaned_csv)
 
 etl_steam_games()
