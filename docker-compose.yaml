@@ -29,6 +29,8 @@ services:
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
       - ./data:/opt/airflow/data
+      - ./airflow/requirements.txt:/opt/airflow/requirements.txt
+      - ./airflow/kaggle.json:/opt/airflow/kaggle.json
     ports:
       - "8080:8080"
     healthcheck:
@@ -38,6 +40,14 @@ services:
       retries: 5
     command: >
       bash -c "
+        pip install --upgrade pip
+        pip install -r /opt/airflow/requirements.txt &&
+        mkdir -p ~/.kaggle &&
+        cp /opt/airflow/kaggle.json ~/.kaggle/ &&
+        cd /opt/airflow/data &&
+        kaggle datasets download -d fronkongames/steam-games-dataset &&
+        cd ~ &&
+        chmod 600 ~/.kaggle/kaggle.json &&
         airflow db init &&
         airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com &&
         airflow webserver
@@ -58,7 +68,14 @@ services:
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
       - ./data:/opt/airflow/data
-    command: airflow scheduler
+      - ./airflow/requirements.txt:/opt/airflow/requirements.txt
+      - ./airflow/kaggle.json:/opt/airflow/kaggle.json
+    command: >
+      bash -c "
+        pip install --upgrade pip
+        pip install -r /opt/airflow/requirements.txt &&
+        airflow scheduler
+      "
 
   server:
     build: ./server
