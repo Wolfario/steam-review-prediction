@@ -1,4 +1,3 @@
 requests
-zipfile36
 kaggle
 beautifulsoup4

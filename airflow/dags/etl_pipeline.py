@@ -1,14 +1,14 @@
 import os
-import zipfile
 import requests
+import kaggle
 import numpy as np
 from datetime import datetime
 from bs4 import BeautifulSoup
 import pandas as pd
 from airflow.decorators import dag, task
 from sqlalchemy import create_engine
+from kaggle.api.kaggle_api_extended import KaggleApi
 
-ZIP_PATH = "/opt/airflow/data/steam-games-dataset.zip"
 EXTRACT_PATH = "/opt/airflow/data/raw/"
 CSV_PATH = "/opt/airflow/data/raw/games.csv"
 TMP_PATH_LOCAL = "/opt/airflow/data/tmp_local.csv"
@@ -81,21 +81,30 @@ def find_upcoming_games():
 def etl_steam_games():
 
     @task
-    def extract_local() -> str:
-        if not os.path.exists(CSV_PATH):
-            with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
-                zip_ref.extractall('/opt/airflow/data/raw/')
-        df = pd.read_csv(CSV_PATH, index_col=False)
-        df.to_csv(TMP_PATH_LOCAL, index=False)
-        return TMP_PATH_LOCAL
+    def download_steam_data():
+        if not os.path.exists("/opt/airflow/data/games.csv"):
+            api = KaggleApi()
+            api.authenticate()
+            api.dataset_download_files("fronkongames/steam-games-dataset", path="/opt/airflow/data", unzip=True)
+            if os.path.exists("/opt/airflow/data/games.json"):
+                os.remove("/opt/airflow/data/games.json")
+        return "/opt/airflow/data/games.csv"
+
+    @task
+    def extract_local(games_path: str) -> str:
+        df = pd.read_csv(games_path, index_col=False)
+        tmp_path_local = "/opt/airflow/data/tmp_local.csv"
+        df.to_csv(tmp_path_local, index=False)
+        return tmp_path_local
     
     @task
     def extract_upcoming() -> str:
         df = find_upcoming_games()
         if df.empty:
             raise ValueError("No upcoming games found. Aborting ETL pipeline.")        
-        df.to_csv(TMP_PATH_UPCOMING, index=False)
-        return TMP_PATH_UPCOMING
+        tmp_path_upcoming = "/opt/airflow/data/tmp_upcoming.csv"
+        df.to_csv(tmp_path_upcoming, index=False)
+        return tmp_path_upcoming
     
     @task
     def merge_data(local_path: str, upcoming_path: str) -> str:
@@ -103,39 +112,49 @@ def etl_steam_games():
         df_upcoming = pd.read_csv(upcoming_path)
         df_combined = pd.concat([df_local, df_upcoming], ignore_index=True)
         df_combined.drop_duplicates(subset="AppID", inplace=True)
-        df_combined.to_csv(TMP_PATH_MERGED, index=False)
-        return TMP_PATH_MERGED
+        tmp_path_merged = "/opt/airflow/data/tmp_merged.csv"
+        df_combined.to_csv(tmp_path_merged, index=False)
+        return tmp_path_merged
 
     @task
-    def transform(input_path: str) -> str:
-        df = pd.read_csv(input_path)
+    def transform(merged_path: str) -> str:
+        df = pd.read_csv(merged_path)
         df = df[COLUMNS_TO_SELECT]
         df["Positive Percentage"] = df.apply(
             lambda row: (row["Positive"] / (row["Positive"] + row["Negative"]) * 100)
             if (row["Positive"] + row["Negative"]) > 0 else np.nan,
             axis=1
         )
-        df.to_csv(TMP_PATH_TRANSFORMED, index=False)
-        return TMP_PATH_TRANSFORMED
+        tmp_path_transformed = "/opt/airflow/data/tmp_transformed.csv"
+        df.to_csv(tmp_path_transformed, index=False)
+        return tmp_path_transformed
 
     @task
-    def load(transformed_path: str):
+    def load(transformed_path: str) -> bool:
         engine = create_engine(os.getenv("DATABASE_URL", "postgresql://user:password@postgres:5432/steamdb"))
         df = pd.read_csv(transformed_path)
         df.to_sql("steam_games", con=engine, if_exists="replace", index=False)
         return True
 
     @task
-    def cleanup_tmp_files(load_feedback: bool):
-        for path in [TMP_PATH_LOCAL, TMP_PATH_UPCOMING, TMP_PATH_MERGED, TMP_PATH_TRANSFORMED, ZIP_PATH]:
+    def cleanup_tmp_files(
+        local_path: str, 
+        upcoming_path: str, 
+        combined_path: str, 
+        transformed_path: str, 
+        _fb: bool
+    ):
+        for path in [local_path, upcoming_path, combined_path, transformed_path]:
             if os.path.exists(path):
                 os.remove(path)
+        print(f'Feedback {_fb} has been recieved.')
 
-    local_path = extract_local()
+    games_path = download_steam_data()
+    local_path = extract_local(games_path)
     upcoming_path = extract_upcoming()
     combined_path = merge_data(local_path, upcoming_path)
     transformed_path = transform(combined_path)
-    last_fb = load(transformed_path)
-    cleanup_tmp_files(last_fb)
+    feed_back = load(transformed_path)
+    cleanup_tmp_files(local_path, upcoming_path, combined_path, transformed_path, feed_back)
 
 etl_steam_games()

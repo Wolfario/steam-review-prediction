@@ -15,7 +15,7 @@ services:
       - "5432:5432"
 
   airflow:
-    image: apache/airflow:2.7.3
+    build: ./airflow
     container_name: steam_airflow
     restart: always
     depends_on:
@@ -40,21 +40,13 @@ services:
       retries: 5
     command: >
       bash -c "
-        pip install --upgrade pip
-        pip install -r /opt/airflow/requirements.txt &&
-        mkdir -p ~/.kaggle &&
-        cp /opt/airflow/kaggle.json ~/.kaggle/ &&
-        cd /opt/airflow/data &&
-        kaggle datasets download -d fronkongames/steam-games-dataset &&
-        cd ~ &&
-        chmod 600 ~/.kaggle/kaggle.json &&
         airflow db init &&
         airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com &&
         airflow webserver
       "
 
   airflow_scheduler:
-    image: apache/airflow:2.7.3
+    build: ./airflow
     container_name: steam_airflow_scheduler
     restart: always
     depends_on:
@@ -72,8 +64,6 @@ services:
       - ./airflow/kaggle.json:/opt/airflow/kaggle.json
     command: >
       bash -c "
-        pip install --upgrade pip
-        pip install -r /opt/airflow/requirements.txt &&
         airflow scheduler
       "
 
