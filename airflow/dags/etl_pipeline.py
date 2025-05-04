@@ -82,8 +82,9 @@ def etl_steam_games():
 
     @task
     def extract_local() -> str:
-        with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
-            zip_ref.extractall('/opt/airflow/data/raw/')
+        if not os.path.exists(CSV_PATH):
+            with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
+                zip_ref.extractall('/opt/airflow/data/raw/')
         df = pd.read_csv(CSV_PATH, index_col=False)
         df.to_csv(TMP_PATH_LOCAL, index=False)
         return TMP_PATH_LOCAL
@@ -126,7 +127,7 @@ def etl_steam_games():
 
     @task
     def cleanup_tmp_files(load_feedback: bool):
-        for path in [TMP_PATH_LOCAL, TMP_PATH_UPCOMING, TMP_PATH_MERGED, TMP_PATH_TRANSFORMED]:
+        for path in [TMP_PATH_LOCAL, TMP_PATH_UPCOMING, TMP_PATH_MERGED, TMP_PATH_TRANSFORMED, ZIP_PATH]:
             if os.path.exists(path):
                 os.remove(path)
 
