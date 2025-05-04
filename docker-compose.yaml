@@ -1,18 +1,18 @@
 version: "3.9"
 
 services:
-    postgres:
-        image: postgres:15
-        container_name: steam_postgres
-        restart: always
-        environment:
-            POSTGRES_USER: user
-            POSTGRES_PASSWORD: password
-            POSTGRES_DB: steamdb
-        volumes:
-            - pgdata:/var/lib/postgresql/data
-        ports:
-            - "5432:5432"
+  postgres:
+    image: postgres:15
+    container_name: steam_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: steamdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
   airflow:
     build: ./airflow
@@ -68,32 +68,32 @@ services:
       "
 
   server:
-        build: ./server
-        container_name: steam_server
-        restart: always
-        ports:
-            - "3000:3000"
-        volumes:
-            - /app/node_modules
-        environment:
-            - NODE_ENV=development
-            - DATABASE_URL=postgresql://user:password@postgres:5432/steamdb
-        depends_on:
-            - postgres
+    build: ./server
+    container_name: steam_server
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://user:password@postgres:5432/steamdb
+    depends_on:
+      - postgres
 
-    client:
-        build: ./client
-        container_name: steam_client
-        restart: always
-        ports:
-            - "5173:5173"
-        volumes:
-            - ./client:/app
-            - /app/node_modules
-        environment:
-            - NODE_ENV=development
-        depends_on:
-            - server
+  client:
+    build: ./client
+    container_name: steam_client
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - server
 
 volumes:
-    pgdata:
+  pgdata:
