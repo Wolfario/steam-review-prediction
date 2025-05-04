@@ -84,7 +84,7 @@ def etl_steam_games():
     def extract_local() -> str:
         with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
             zip_ref.extractall('/opt/airflow/data/raw/')
-        df = pd.read_csv(CSV_PATH)
+        df = pd.read_csv(CSV_PATH, index_col=False)
         df.to_csv(TMP_PATH_LOCAL, index=False)
         return TMP_PATH_LOCAL
     
