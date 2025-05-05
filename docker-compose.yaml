@@ -74,7 +74,10 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /app/node_modules
+      - ./server/src:/app/src
+      - ./server/tsconfig.json:/app/tsconfig.json
+      - ./server/package.json:/app/package.json
+      - ./server/package-lock.json:/app/package-lock.json
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://user:password@postgres:5432/steamdb
@@ -88,8 +91,16 @@ services:
     ports:
       - "5173:5173"
     volumes:
-      - ./client:/app
-      - /app/node_modules
+      - ./client/src:/app/src
+      - ./client/public:/app/public
+      - ./client/index.html:/app/index.html
+      - ./client/eslint.config.js:/app/eslint.config.js
+      - ./client/tsconfig.json:/app/tsconfig.json
+      - ./client/tsconfig.app.json:/app/tsconfig.app.json
+      - ./client/tsconfig.node.json:/app/tsconfig.node.json
+      - ./client/vite.config.ts:/app/vite.config.ts
+      - ./client/package.json:/app/package.json
+      - ./client/package-lock.json:/app/package-lock.json
     environment:
       - NODE_ENV=development
     depends_on:
