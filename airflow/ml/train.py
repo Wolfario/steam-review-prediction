@@ -1,5 +1,6 @@
 import os
 import mlflow
+import joblib
 import mlflow.sklearn
 import pandas as pd
 from datetime import datetime
@@ -54,13 +55,13 @@ def preprocess(df):
     X = pd.concat([genres_df, categories_df, about_df, numeric_features], axis=1)
     y = df['Positive Percentage'].reset_index(drop=True)
 
-    return X, y
+    return X, y, tfidf_genres, tfidf_categories, tfidf_about
 
 def train():
     engine = get_db_connection()
 
     df = load_data(engine)
-    X, y = preprocess(df)
+    X, y, tfidf_genres, tfidf_categories, tfidf_about = preprocess(df)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
 
@@ -76,6 +77,16 @@ def train():
         mlflow.log_param("model_type", "RandomForestRegressor")
         mlflow.log_metric("mae", mae)
         mlflow.sklearn.log_model(model, "model")
+        
+        # Save vectorizers locally
+        joblib.dump(tfidf_genres, "tfidf_genres.pkl")
+        joblib.dump(tfidf_categories, "tfidf_categories.pkl")
+        joblib.dump(tfidf_about, "tfidf_about.pkl")
+
+        # Log as MLflow artifacts
+        mlflow.log_artifact("tfidf_genres.pkl")
+        mlflow.log_artifact("tfidf_categories.pkl")
+        mlflow.log_artifact("tfidf_about.pkl")
     
 if __name__ == "__main__":
     train()

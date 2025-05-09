@@ -48,6 +48,9 @@ airflow/airflow.cfg
 airflow/webserver_config.py
 airflow/kaggle.json
 
+# MLflow
+mlflow/
+
 # Python
 __pycache__/
 *.py[cod]

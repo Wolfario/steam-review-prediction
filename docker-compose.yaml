@@ -72,10 +72,7 @@ services:
       - ./airflow/kaggle.json:/opt/airflow/kaggle.json
       - ./airflow/ml:/opt/airflow/ml
       - mlruns:/mlruns
-    command: >
-      bash -c "
-        airflow scheduler
-      "
+    command: airflow scheduler
 
   server:
     build: ./server
@@ -126,6 +123,17 @@ services:
     environment:
       - MLFLOW_ARTIFACT_ROOT=/mlruns
     command: mlflow server --backend-store-uri /mlruns --default-artifact-root /mlruns --host 0.0.0.0
+
+  predictor:
+    build: ./predict_service
+    container_name: steam_predictor
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./mlflow:/mlruns
+      - ./airflow/ml:/ml
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
 
 volumes:
   pgdata:
