@@ -71,7 +71,7 @@ def find_upcoming_games():
     return pd.DataFrame(result)
 
 @dag(
-    dag_id="etl_steam_games_v2",
+    dag_id="etl_steam_games",
     start_date=datetime(2025, 1, 1),
     schedule_interval=None,
     catchup=False,
