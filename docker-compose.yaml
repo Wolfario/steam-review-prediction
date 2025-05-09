@@ -24,6 +24,9 @@ services:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:password@postgres:5432/steamdb
       AIRFLOW__CORE_LOAD_EXAMPLES: "false"
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_ARTIFACT_ROOT: /mlruns
+      DATABASE_URL: postgresql://user:password@postgres:5432/steamdb
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -31,6 +34,8 @@ services:
       - ./data:/opt/airflow/data
       - ./airflow/requirements.txt:/opt/airflow/requirements.txt
       - ./airflow/kaggle.json:/opt/airflow/kaggle.json
+      - ./airflow/ml:/opt/airflow/ml
+      - mlruns:/mlruns
     ports:
       - "8080:8080"
     healthcheck:
@@ -55,6 +60,9 @@ services:
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:password@postgres:5432/steamdb
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_ARTIFACT_ROOT: /mlruns
+      DATABASE_URL: postgresql://user:password@postgres:5432/steamdb
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -62,6 +70,8 @@ services:
       - ./data:/opt/airflow/data
       - ./airflow/requirements.txt:/opt/airflow/requirements.txt
       - ./airflow/kaggle.json:/opt/airflow/kaggle.json
+      - ./airflow/ml:/opt/airflow/ml
+      - mlruns:/mlruns
     command: >
       bash -c "
         airflow scheduler
@@ -79,8 +89,8 @@ services:
       - ./server/package.json:/app/package.json
       - ./server/package-lock.json:/app/package-lock.json
     environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://user:password@postgres:5432/steamdb
+      NODE_ENV: development
+      DATABASE_URL: postgresql://user:password@postgres:5432/steamdb
     depends_on:
       - postgres
 
@@ -105,6 +115,18 @@ services:
       - NODE_ENV=development
     depends_on:
       - server
+    
+  mlflow:
+    image: ghcr.io/mlflow/mlflow
+    container_name: mlflow-server
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./mlflow:/mlruns
+    environment:
+      - MLFLOW_ARTIFACT_ROOT=/mlruns
+    command: mlflow server --backend-store-uri /mlruns --default-artifact-root /mlruns --host 0.0.0.0
 
 volumes:
   pgdata:
+  mlruns:
