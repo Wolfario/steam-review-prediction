@@ -11,6 +11,8 @@ EXPERIMENT_NAME = "steam_rating_prediction"
 
 def get_latest_run_id():
     client = MlflowClient()
+    
+    # Fetch experiment metadata by name
     experiment = client.get_experiment_by_name(EXPERIMENT_NAME)
     if experiment is None:
         raise ValueError(f"Experiment '{EXPERIMENT_NAME}' not found.")    
@@ -28,6 +30,7 @@ def get_latest_run_id():
     return runs[0].info.run_id
 
 def load_artifacts(run_id):
+    # Load the trained model and associated TF-IDF vectorizers from MLflow artifacts
     model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
     tfidf_genres = joblib.load(mlflow.artifacts.download_artifacts(run_id=run_id, artifact_path="tfidf_genres.pkl"))
     tfidf_categories = joblib.load(mlflow.artifacts.download_artifacts(run_id=run_id, artifact_path="tfidf_categories.pkl"))
@@ -36,21 +39,27 @@ def load_artifacts(run_id):
 
 
 def preprocess(genres, categories, about, age, tfidf_genres, tfidf_categories, tfidf_about):
+    # Transform input text using pre-trained TF-IDF vectorizers
     genres_input = tfidf_genres.transform([genres])
     categories_input = tfidf_categories.transform([categories])
     about_input = tfidf_about.transform([about])
     
+    # Convert sparse vectors into DataFrames with appropriate column names
     genres_df = pd.DataFrame(genres_input.toarray(), columns=[f"genre_{g}" for g in tfidf_genres.get_feature_names_out()])
     categories_df = pd.DataFrame(categories_input.toarray(), columns=[f"cat_{c}" for c in tfidf_categories.get_feature_names_out()])
     about_df = pd.DataFrame(about_input.toarray(), columns=[f"about_{w}" for w in tfidf_about.get_feature_names_out()])
     age_df = pd.DataFrame([[age]], columns=["Required age"])
     
+    # Concatenate all input features into a single DataFrame
     X = pd.concat([genres_df, categories_df, about_df, age_df], axis=1)
     return X
 
 def predict(genres, categories, about, age):
+    # Get latest trained model and vectorizers
     run_id = get_latest_run_id()
     model, tfidf_genres, tfidf_categories, tfidf_about = load_artifacts(run_id)
+
+    # Preprocess inputs and make prediction
     X = preprocess(genres, categories, about, age, tfidf_genres, tfidf_categories, tfidf_about)
     prediction = model.predict(X)[0]
     return round(prediction, 2)
