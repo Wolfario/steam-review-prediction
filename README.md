@@ -10,8 +10,6 @@ This project combines data engineering, machine learning and modern web technolo
 
 The goal is to demonstrate how natural language processing and structured game data can be used to predict aggregate review scores, providing insights for players, developers, or analysts.
 
----
-
 ## Getting Started
 
 ### Prerequisites
@@ -21,8 +19,6 @@ The goal is to demonstrate how natural language processing and structured game d
 
 2. **Docker & Docker Compose**
     Ensure Docker and Docker Compose are installed on your machine.
-
----
 
 ## Running the Project
 
