@@ -15,10 +15,9 @@ app.get("/", (req, res) => {
 app.get("/api/games", async (req, res) => {
     try {
         const result = await pool.query(
-            'SELECT "Name" FROM steam_games LIMIT 5'
+            'SELECT "Name" FROM steam_games LIMIT 10;'
         );
         const gameNames = result.rows.map((row) => row.Name);
-        console.log(gameNames);
         res.json(gameNames);
     } catch (error) {
         console.error("Error fetching games:", error);
