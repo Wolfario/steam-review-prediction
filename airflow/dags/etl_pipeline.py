@@ -107,6 +107,18 @@ def etl_steam_games():
     @task
     def extract_local(games_path: str) -> str:
         df = pd.read_csv(games_path, index_col=False)
+
+        # Create a dictionary to hold column name mappings for renaming
+        columns_to_change = dict()
+        # Loop over column indices from 8 to 38 (inclusive), which are the columns that got shifted
+        for idx in range(8, 39):
+            columns_to_change[df.columns[idx]] = df.columns[idx-1]
+        
+        # Drop the problematic column 'DiscountDLC count' that caused the misalignment
+        df.drop(columns=['DiscountDLC count'], inplace=True)        
+        # Rename the columns based on the mapping to restore the correct column headers
+        df = df.rename(columns=columns_to_change)
+
         tmp_path_local = "/opt/airflow/data/tmp_local.csv"
         df.to_csv(tmp_path_local, index=False)
         return tmp_path_local
