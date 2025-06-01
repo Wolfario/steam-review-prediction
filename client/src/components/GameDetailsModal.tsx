@@ -12,6 +12,26 @@ const GameDetailsModal = ({ isOpen, onClose, game }: GameDetailsModalProps) => {
         return null;
     }
 
+    // const predictRating = async () => {
+    //     const body = {
+    //         genres: game.genres,
+    //         categories: game.similarGames,
+    //         about: game.description,
+    //         age: game.userRating,
+    //     };
+
+    //     const res = await fetch("http://localhost:3000/api/predict", {
+    //         method: "POST",
+    //         headers: {
+    //             "Content-Type": "application/json",
+    //         },
+    //         body: JSON.stringify(body),
+    //     });
+
+    //     const data = await res.json();
+    //     console.log(data);
+    // };
+
     return (
         <div className="fixed inset-0 bg-[rgba(0,0,0,0.4)] flex justify-center items-center z-50">
             <div className="bg-white rounded-2xl p-6 max-w-3xl w-full shadow-xl relative">

@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 interface GameCardProps {
     imageSrc: string;
     name: string;
@@ -15,13 +17,17 @@ const GameCard = ({
     userRating,
     onClick,
 }: GameCardProps) => {
+    const [loaded, setLoaded] = useState(false);
+
     const getRatingColor = () => {
+        if (userRating == 0) return "No Rating";
         if (userRating >= 75) return "text-green-600";
         if (userRating >= 50) return "text-yellow-600";
         return "text-red-600";
     };
 
     const getRatingLabel = () => {
+        if (userRating == 0) return "No Rating";
         if (userRating >= 75) return "Very Positive";
         if (userRating >= 50) return "Mixed";
         return "Negative";
@@ -33,11 +39,16 @@ const GameCard = ({
             className="flex items-center justify-between p-4 border border-gray-200 rounded-2xl bg-white shadow-md hover:shadow-lg transition-shadow cursor-pointer"
         >
             <div className="flex items-center gap-4">
-                <img
-                    src={imageSrc}
-                    alt={name}
-                    className="w-auto h-20 object-cover rounded-xl border border-gray-300"
-                />
+                <div className="relative w-32 h-20">
+                    <img
+                        src={imageSrc}
+                        alt={name}
+                        onLoad={() => setLoaded(true)}
+                        className={`w-full h-full object-cover rounded-xl border border-gray-300 transition-all duration-500 ${
+                            loaded ? "blur-0" : "blur-md scale-105"
+                        }`}
+                    />
+                </div>
                 <div>
                     <h2 className="text-xl font-semibold text-gray-800">
                         {name}
@@ -66,7 +77,7 @@ const GameCard = ({
 
             <div className="flex flex-col items-end">
                 <span className={`text-lg font-bold ${getRatingColor()}`}>
-                    {userRating}%
+                    {userRating === 0 ? "N/A" : userRating + "%"}
                 </span>
                 <span className="text-xs text-gray-500">
                     {getRatingLabel()}
