@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 import sys
-sys.path.append("/ml")  # points to the mounted /airflow/ml folder
 from predict import predict
 
 app = FastAPI()

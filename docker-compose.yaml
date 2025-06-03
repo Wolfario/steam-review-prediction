@@ -123,6 +123,7 @@ services:
             - ./airflow/ml:/ml
         environment:
             - MLFLOW_TRACKING_URI=http://mlflow:5000
+            - PYTHONPATH=/ml
 
 volumes:
     pgdata:
