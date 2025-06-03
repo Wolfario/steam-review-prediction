@@ -21,7 +21,8 @@ TMP_PATH_TRANSFORMED = "/opt/airflow/data/tmp_transformed.csv"
 COLUMNS_TO_SELECT = [
     "AppID", "Name", "Release date", "Estimated owners", "Required age", "Price",
     "About the game", "Reviews", "Header image", "Metacritic score", "User score",
-    "Positive", "Negative", "Average playtime two weeks", "Categories", "Genres", "Tags"
+    "Positive", "Negative", "Average playtime two weeks", "Categories", "Genres", "Tags",
+    "Upcoming status"
 ]
 
 # Function to scrape upcoming games data from Steam store
@@ -70,6 +71,7 @@ def find_upcoming_games():
         result['Genres'].append(",".join(g.get('description', '') for g in genres))
         categories = game_info.get('categories', [])
         result['Categories'].append(",".join(c.get('description', '') for c in categories))
+        result['Upcoming status'].append(True)
 
         # Fill in unavailable fields with NaN to maintain consistent structure
         for none_attr in [
@@ -118,6 +120,9 @@ def etl_steam_games():
         df.drop(columns=['DiscountDLC count'], inplace=True)        
         # Rename the columns based on the mapping to restore the correct column headers
         df = df.rename(columns=columns_to_change)
+
+        # Add the new column with all values set to False
+        df["Upcoming status"] = False
 
         tmp_path_local = "/opt/airflow/data/tmp_local.csv"
         df.to_csv(tmp_path_local, index=False)
