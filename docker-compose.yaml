@@ -85,6 +85,7 @@ services:
         working_dir: /app
         depends_on:
             - postgres
+            - predictor
 
     client:
         build: ./client

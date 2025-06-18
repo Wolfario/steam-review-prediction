@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Game } from "../types/game";
 import SimilarGameCard from "./SimilarGameCard";
 
@@ -8,29 +9,32 @@ interface GameDetailsModalProps {
 }
 
 const GameDetailsModal = ({ isOpen, onClose, game }: GameDetailsModalProps) => {
+    const [predictedRating, setPredictedRating] = useState(0);
+
     if (!isOpen) {
         return null;
     }
 
-    // const predictRating = async () => {
-    //     const body = {
-    //         genres: game.genres,
-    //         categories: game.similarGames,
-    //         about: game.description,
-    //         age: game.userRating,
-    //     };
+    const predictRating = async () => {
+        const body = {
+            genres: game.genres.join(","),
+            categories: "SomeCategory",
+            about: game.description,
+            age: 0, // Replace with actual age if needed
+        };
 
-    //     const res = await fetch("http://localhost:3000/api/predict", {
-    //         method: "POST",
-    //         headers: {
-    //             "Content-Type": "application/json",
-    //         },
-    //         body: JSON.stringify(body),
-    //     });
+        const res = await fetch("http://localhost:3000/api/predict", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+        });
 
-    //     const data = await res.json();
-    //     console.log(data);
-    // };
+        const data = await res.json();
+        setPredictedRating(data.prediction);
+        console.log("Prediction:", data.prediction);
+    };
 
     return (
         <div className="fixed inset-0 bg-[rgba(0,0,0,0.4)] flex justify-center items-center z-50">
@@ -76,12 +80,15 @@ const GameDetailsModal = ({ isOpen, onClose, game }: GameDetailsModalProps) => {
                         </p>
                         <button
                             className="mt-4 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded hover:bg-indigo-700 transition"
-                            onClick={() =>
-                                alert("AI rating prediction coming soon!")
-                            }
+                            onClick={() => predictRating()}
                         >
                             Predict AI Rating
                         </button>
+                        {predictedRating > 0 ? (
+                            <p className="mt-2">
+                                Predicted Rating: {predictedRating}
+                            </p>
+                        ) : null}
                     </div>
                 </div>
 
