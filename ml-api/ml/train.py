@@ -16,7 +16,11 @@ def get_db_connection():
     return create_engine(os.getenv("DATABASE_URL", "postgresql://user:password@postgres:5432/steamdb"))
 
 def load_data(engine):
-    query = 'SELECT "AppID", "Name", "Required age", "About the game", "Genres", "Categories", "Positive Percentage" FROM steam_games WHERE "Positive Percentage" IS NOT NULL;'
+    query = '''
+        SELECT "AppID", "Name", "Required age", "About the game", "Genres", "Categories", "Positive Percentage" 
+        FROM steam_games 
+        WHERE "Upcoming status" = FALSE AND "Positive Percentage" IS NOT NULL;
+    '''
     return pd.read_sql(query, con=engine)
 
 def comma_tokenizer(text):

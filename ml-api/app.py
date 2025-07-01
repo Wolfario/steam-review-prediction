@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from predict import predict
 from train import train
 from model_registry import get_latest_successful_run
+from similarity_search import search_similar_games
 
 app = FastAPI()
 
@@ -11,6 +12,11 @@ class GameData(BaseModel):
     categories: str
     about: str
     age: int
+
+class SimilarityForm(BaseModel):
+    genres: str
+    categories: str
+    count: int
 
 @app.post("/train")
 def start_training(background_tasks: BackgroundTasks):
@@ -32,3 +38,7 @@ def get_status():
 def make_prediction(data: GameData):
     result = predict(data.genres, data.categories, data.about, data.age)
     return {"prediction": result}
+
+@app.post("/find_similarity")
+def find_similar_games(data: SimilarityForm):
+    return search_similar_games(data.genres, data.categories, data.count)
