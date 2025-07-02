@@ -28,7 +28,7 @@ To start the application, run the following command from the project root: `dock
 
 Once the services are running: 
 
-1. Open the Airflow web interface at http://localhost:8080.
+1. Open the Airflow web interface at http://localhost:8080 (login: `admin`, password: `admin`).
 2. Locate and trigger the DAG named `etl_steam_games`.
 
 This DAG will extract, transform, and load the *steam dataset* into the `steam_games` table in PostgreSQL.
@@ -37,8 +37,8 @@ This DAG will extract, transform, and load the *steam dataset* into the `steam_g
 
 To use the game score prediction feature:
 
-1. Make sure the `etl_steam_games` DAG has been successfully run at least once.
-2. Trigger the DAG named `train_pipeline` in Airflow.
+1. Train the model by clicking the Model Training button in the web interface.
+2. Once training is complete, it will be visible in the interface.
 
 ### Web Interface
 

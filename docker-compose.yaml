@@ -24,16 +24,12 @@ services:
             AIRFLOW__CORE__EXECUTOR: LocalExecutor
             AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:password@postgres:5432/steamdb
             AIRFLOW__CORE_LOAD_EXAMPLES: "false"
-            MLFLOW_TRACKING_URI: http://mlflow:5000
-            MLFLOW_ARTIFACT_ROOT: /mlruns
             DATABASE_URL: postgresql://user:password@postgres:5432/steamdb
         volumes:
             - ./airflow/dags:/opt/airflow/dags
             - ./airflow/logs:/opt/airflow/logs
             - ./airflow/plugins:/opt/airflow/plugins
             - ./data:/opt/airflow/data
-            - ./airflow/ml:/opt/airflow/ml
-            - mlruns:/mlruns
         ports:
             - "8080:8080"
         healthcheck:
@@ -58,16 +54,12 @@ services:
         environment:
             AIRFLOW__CORE__EXECUTOR: LocalExecutor
             AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:password@postgres:5432/steamdb
-            MLFLOW_TRACKING_URI: http://mlflow:5000
-            MLFLOW_ARTIFACT_ROOT: /mlruns
             DATABASE_URL: postgresql://user:password@postgres:5432/steamdb
         volumes:
             - ./airflow/dags:/opt/airflow/dags
             - ./airflow/logs:/opt/airflow/logs
             - ./airflow/plugins:/opt/airflow/plugins
             - ./data:/opt/airflow/data
-            - ./airflow/ml:/opt/airflow/ml
-            - mlruns:/mlruns
         command: airflow scheduler
 
     server:
@@ -105,27 +97,25 @@ services:
 
     mlflow:
         image: ghcr.io/mlflow/mlflow
-        container_name: mlflow-server
+        container_name: mlflow_server
         ports:
-            - "5001:5000"
+            - "5000:5000"
         volumes:
             - ./mlflow:/mlruns
         environment:
             - MLFLOW_ARTIFACT_ROOT=/mlruns
-        command: mlflow server --backend-store-uri /mlruns --default-artifact-root /mlruns --host 0.0.0.0
+        command: mlflow server --backend-store-uri /mlruns --default-artifact-root /mlruns --host 0.0.0.0 --port 5000
 
-    predictor:
-        build: ./predict_service
-        container_name: steam_predictor
+    ml-api:
+        build: ./ml-api
+        container_name: ml_api
         ports:
             - "8000:8000"
         volumes:
             - ./mlflow:/mlruns
-            - ./airflow/ml:/ml
         environment:
             - MLFLOW_TRACKING_URI=http://mlflow:5000
             - PYTHONPATH=/ml
 
 volumes:
     pgdata:
-    mlruns:

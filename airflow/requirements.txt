@@ -1,10 +1,5 @@
 requests
 kaggle
 beautifulsoup4
-mlflow
 psycopg2-binary
-scikit-learn
-pandas
-fastapi
 uvicorn
-
