@@ -68,15 +68,12 @@ app.post("/api/predict", async (req, res) => {
     async function callPredictor(retries = 5) {
         for (let i = 0; i < retries; i++) {
             try {
-                const res = await axios.post(
-                    "http://steam_predictor:8000/predict",
-                    {
-                        genres: req.body.genres,
-                        categories: req.body.categories,
-                        about: req.body.about,
-                        age: req.body.age,
-                    }
-                );
+                const res = await axios.post("http://localhost:8000/predict", {
+                    genres: req.body.genres,
+                    categories: req.body.categories,
+                    about: req.body.about,
+                    age: req.body.age,
+                });
                 return res.data;
             } catch (err) {
                 console.error(
