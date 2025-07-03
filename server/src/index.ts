@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import pool from "./database/db";
+import axios from "axios";
 
 const app = express();
 const PORT = 3000;
@@ -63,21 +64,37 @@ app.get("/api/games", async (req, res) => {
     }
 });
 
-// app.post("/api/predict", async (req, res) => {
-//     const { genres, categories, about, age } = req.body;
-//     try {
-//         const result = await pool.query("SELECT predict($1, $2, $3, $4)", [
-//             genres,
-//             categories,
-//             about,
-//             age,
-//         ]);
-//         res.json({ prediction: result.rows[0].predict });
-//     } catch (error) {
-//         console.error("Error making prediction:", error);
-//         res.status(500).json({ error: "Failed to make prediction" });
-//     }
-// });
+app.post("/api/predict", async (req, res) => {
+    async function callPredictor(retries = 5) {
+        for (let i = 0; i < retries; i++) {
+            try {
+                const res = await axios.post("http://localhost:8000/predict", {
+                    genres: req.body.genres,
+                    categories: req.body.categories,
+                    about: req.body.about,
+                    age: req.body.age,
+                });
+                return res.data;
+            } catch (err) {
+                console.error(
+                    `Predictor not available (attempt ${i + 1}), retrying...`
+                );
+                await new Promise((r) => setTimeout(r, 3000)); // wait 3 seconds
+            }
+        }
+        throw new Error(
+            "Predictor service is not available after several retries"
+        );
+    }
+
+    try {
+        const prediction = await callPredictor();
+        res.json(prediction);
+    } catch (error) {
+        console.error("Prediction error:", error);
+        res.status(500).json({ error: "Prediction failed" });
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`Server is up: http://localhost:${PORT}`);

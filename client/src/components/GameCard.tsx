@@ -6,6 +6,7 @@ interface GameCardProps {
     genres: string[];
     released: boolean;
     userRating: number;
+    predictedRating?: number;
     onClick?: () => void;
 }
 
@@ -15,21 +16,22 @@ const GameCard = ({
     genres,
     released,
     userRating,
+    predictedRating,
     onClick,
 }: GameCardProps) => {
     const [loaded, setLoaded] = useState(false);
 
-    const getRatingColor = () => {
-        if (userRating == 0) return "No Rating";
-        if (userRating >= 75) return "text-green-600";
-        if (userRating >= 50) return "text-yellow-600";
+    const getRatingColor = (rating: number) => {
+        if (rating == 0) return "No Rating";
+        if (rating >= 75) return "text-green-600";
+        if (rating >= 50) return "text-yellow-600";
         return "text-red-600";
     };
 
-    const getRatingLabel = () => {
-        if (userRating == 0) return "No Rating";
-        if (userRating >= 75) return "Very Positive";
-        if (userRating >= 50) return "Mixed";
+    const getRatingLabel = (rating: number) => {
+        if (rating == 0) return "No Rating";
+        if (rating >= 75) return "Very Positive";
+        if (rating >= 50) return "Mixed";
         return "Negative";
     };
 
@@ -75,13 +77,34 @@ const GameCard = ({
                 </div>
             </div>
 
-            <div className="flex flex-col items-end">
-                <span className={`text-lg font-bold ${getRatingColor()}`}>
-                    {userRating === 0 ? "N/A" : userRating + "%"}
-                </span>
-                <span className="text-xs text-gray-500">
-                    {getRatingLabel()}
-                </span>
+            <div className="flex flex-col items-end space-y-1">
+                {/* User Rating */}
+                <div className="flex flex-col items-end">
+                    <span
+                        className={`text-lg font-bold ${getRatingColor(
+                            userRating
+                        )}`}
+                    >
+                        {userRating === 0 ? "N/A" : `${userRating}%`}
+                    </span>
+                    <span className="text-xs text-gray-500">User Rating</span>
+                </div>
+
+                {/* Predicted Rating (if available) */}
+                {typeof predictedRating === "number" && (
+                    <div className="flex flex-col items-end">
+                        <span
+                            className={`text-lg font-bold ${getRatingColor(
+                                predictedRating
+                            )}`}
+                        >
+                            {predictedRating}%
+                        </span>
+                        <span className="text-xs text-indigo-500 font-medium">
+                            AI Predicted
+                        </span>
+                    </div>
+                )}
             </div>
         </div>
     );
