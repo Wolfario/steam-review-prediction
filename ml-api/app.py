@@ -45,7 +45,7 @@ def get_status():
     return {
         "status": "ready",
         "run_id": run.info.run_id,
-        "timestamp": run.info.start_time,
+        "timestamp": run.info.start_time
     }
 
 
