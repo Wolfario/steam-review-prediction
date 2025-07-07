@@ -2,15 +2,23 @@ import { useEffect, useState } from "react";
 import GameCard from "./GameCard";
 import GameDetailsModal from "./GameDetailsModal";
 import { Game } from "../types/game";
+import { SimilarGame } from "../types/SimilarGame";
 
 const GameList = () => {
-    const [modalOpen, setModalOpen] = useState(false);
     const [games, setGames] = useState<Game[]>([]);
-    const [selectedGame, setSelectedGame] = useState<Game | null>(null);
     const [page, setPage] = useState(1);
     const [genre, setGenre] = useState("");
     const [loading, setLoading] = useState(false);
     const [allGenres, setAllGenres] = useState<string[]>([]);
+    const [gameDataMap, setGameDataMap] = useState<{
+        [index: number]: {
+            predictedRating: number | null;
+            similarGames: SimilarGame[];
+            loading: boolean;
+            error: string | null;
+        };
+    }>({});
+    const [modalIndex, setModalIndex] = useState<number | null>(null);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -54,6 +62,73 @@ const GameList = () => {
         };
     }, [page, genre]);
 
+    const handlePredictAndSimilar = async (game: Game, index: number) => {
+        setGameDataMap((prev) => ({
+            ...prev,
+            [index]: {
+                predictedRating: null,
+                similarGames: [],
+                loading: true,
+                error: null,
+            },
+        }));
+
+        try {
+            const statusRes = await fetch("http://localhost:8000/status");
+            const statusData = await statusRes.json();
+
+            if (statusData.status !== "ready") {
+                throw new Error("Model is not ready yet.");
+            }
+
+            const predictRes = await fetch("http://localhost:8000/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    genres: game.genres.join(", "),
+                    categories: "SomeCategory",
+                    about: game.description,
+                    age: 0,
+                }),
+            });
+            const predictData = await predictRes.json();
+
+            const similarityRes = await fetch(
+                "http://localhost:8000/find_similarity",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        genres: game.genres.join(", "),
+                        categories: "SomeCategory",
+                        count: 5,
+                    }),
+                }
+            );
+            const similarityData = await similarityRes.json();
+
+            setGameDataMap((prev) => ({
+                ...prev,
+                [index]: {
+                    predictedRating: predictData.prediction,
+                    similarGames: similarityData,
+                    loading: false,
+                    error: null,
+                },
+            }));
+        } catch (err) {
+            setGameDataMap((prev) => ({
+                ...prev,
+                [index]: {
+                    predictedRating: null,
+                    similarGames: [],
+                    loading: false,
+                    error: "Failed to predict or fetch similar games." + err,
+                },
+            }));
+        }
+    };
+
     return (
         <div className="flex flex-col items-center px-4">
             <div className="mt-4">
@@ -85,20 +160,35 @@ const GameList = () => {
                         <div key={index}>
                             <GameCard
                                 {...game}
-                                onClick={() => {
-                                    setSelectedGame(game);
-                                    setModalOpen(true);
-                                }}
+                                predictedRating={
+                                    gameDataMap[index]?.predictedRating ??
+                                    undefined
+                                }
+                                onClick={() => setModalIndex(index)}
                             />
                         </div>
                     ))
                 )}
 
-                {selectedGame && (
+                {modalIndex !== null && (
                     <GameDetailsModal
-                        isOpen={modalOpen}
-                        onClose={() => setModalOpen(false)}
-                        game={selectedGame}
+                        isOpen={modalIndex !== null}
+                        onClose={() => setModalIndex(null)}
+                        game={games[modalIndex]}
+                        predictedRating={
+                            gameDataMap[modalIndex]?.predictedRating ?? null
+                        }
+                        similarGames={
+                            gameDataMap[modalIndex]?.similarGames ?? []
+                        }
+                        loading={gameDataMap[modalIndex]?.loading ?? false}
+                        error={gameDataMap[modalIndex]?.error ?? null}
+                        onPredict={() =>
+                            handlePredictAndSimilar(
+                                games[modalIndex],
+                                modalIndex
+                            )
+                        }
                     />
                 )}
             </div>
