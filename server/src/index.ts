@@ -14,10 +14,11 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/games", async (req, res) => {
-    const page = parseInt(req.query.page as string) || 1;
     const genre = req.query.genre as string | undefined;
-    const limit = 10;
-    const offset = (page - 1) * limit;
+    const releasedOnly = req.query.released === "true";
+    const upcomingOnly = req.query.upcoming === "true";
+    const search = req.query.search as string | undefined;
+    const limit = 100;
 
     try {
         let query = `
@@ -25,25 +26,42 @@ app.get("/api/games", async (req, res) => {
                 "Name", 
                 "Header image", 
                 "Genres", 
-                "User score", 
-                "About the game" 
+                "Positive Percentage", 
+                "About the game",
+                "Upcoming status"
             FROM steam_games
         `;
+        const conditions: string[] = [];
         const values: any[] = [];
 
         if (genre) {
-            query += ` WHERE "Genres" ILIKE $1`;
             values.push(`%${genre}%`);
+            conditions.push(`"Genres" ILIKE $${values.length}`);
         }
 
-        query += ` ORDER BY "User score" DESC LIMIT $${
-            values.length + 1
-        } OFFSET $${values.length + 2}`;
-        values.push(limit, offset);
+        if (releasedOnly) {
+            values.push(false);
+            conditions.push(`"Upcoming status" = $${values.length}`);
+        }
+
+        if (upcomingOnly) {
+            values.push(true);
+            conditions.push(`"Upcoming status" = $${values.length}`);
+        }
+
+        if (search) {
+            values.push(`%${search}%`);
+            conditions.push(`"Name" ILIKE $${values.length}`);
+        }
+
+        if (conditions.length > 0) {
+            query += ` WHERE ` + conditions.join(" AND ");
+        }
+
+        values.push(limit);
+        query += ` ORDER BY "Positive Percentage" DESC LIMIT $${values.length}`;
 
         const result = await pool.query(query, values);
-
-        console.log(result.rows);
 
         const games = result.rows.map((row) => ({
             name: row.Name,
@@ -51,9 +69,11 @@ app.get("/api/games", async (req, res) => {
             genres: row.Genres
                 ? row.Genres.split(",").map((g: string) => g.trim())
                 : [],
-            userRating: row["User score"] ? Math.round(row["User score"]) : 0,
+            userRating: row["Positive Percentage"]
+                ? row["Positive Percentage"].toFixed(2)
+                : "0.00",
             description: row["About the game"] || "No description available.",
-            released: true,
+            released: row["Upcoming status"] === false,
             similarGames: [],
         }));
 

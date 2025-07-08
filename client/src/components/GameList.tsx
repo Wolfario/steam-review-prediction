@@ -6,7 +6,6 @@ import { SimilarGame } from "../types/SimilarGame";
 
 const GameList = () => {
     const [games, setGames] = useState<Game[]>([]);
-    const [page, setPage] = useState(1);
     const [genre, setGenre] = useState("");
     const [loading, setLoading] = useState(false);
     const [allGenres, setAllGenres] = useState<string[]>([]);
@@ -19,6 +18,9 @@ const GameList = () => {
         };
     }>({});
     const [modalIndex, setModalIndex] = useState<number | null>(null);
+    const [releasedOnly, setReleasedOnly] = useState(false);
+    const [upcomingOnly, setUpcomingOnly] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         const controller = new AbortController();
@@ -30,8 +32,15 @@ const GameList = () => {
 
             try {
                 const queryParams = new URLSearchParams();
-                queryParams.append("page", page.toString());
-                if (genre) queryParams.append("genre", genre);
+                if (genre) {
+                    queryParams.append("genre", genre);
+                }
+                if (releasedOnly) {
+                    queryParams.append("released", "true");
+                }
+                if (upcomingOnly) {
+                    queryParams.append("upcoming", "true");
+                }
 
                 const res = await fetch(
                     `http://localhost:3000/api/games?${queryParams.toString()}`,
@@ -60,7 +69,7 @@ const GameList = () => {
         return () => {
             controller.abort();
         };
-    }, [page, genre]);
+    }, [genre, releasedOnly, upcomingOnly]);
 
     const handlePredictAndSimilar = async (game: Game, index: number) => {
         setGameDataMap((prev) => ({
@@ -129,15 +138,46 @@ const GameList = () => {
         }
     };
 
+    const handleSearch = async (searchTerm: string) => {
+        try {
+            const res = await fetch(
+                `http://localhost:3000/api/games?search=${searchTerm}`
+            );
+            const gamesFromBackend: Game[] = await res.json();
+            setGames(gamesFromBackend);
+        } catch (error) {
+            console.error("Error fetching games:", error);
+        }
+    };
+
     return (
         <div className="flex flex-col items-center px-4">
+            <form
+                className="mt-4 flex flex-wrap gap-1 items-center"
+                onSubmit={(e) => e.preventDefault()}
+            >
+                <input
+                    type="text"
+                    placeholder="Search by name"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="px-3 py-1 border rounded w-64"
+                />
+                <button
+                    onClick={() => handleSearch(searchTerm)}
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 cursor-pointer text-white text-sm font-semibold rounded transition disabled:opacity-50"
+                    disabled={!searchTerm}
+                >
+                    Search
+                </button>
+            </form>
+
             <div className="mt-4">
                 <label className="mr-2">Filter by Genre:</label>
                 <select
                     value={genre}
                     onChange={(e) => {
                         setGenre(e.target.value);
-                        setPage(1);
                     }}
                     className="px-2 py-1 border rounded"
                 >
@@ -148,6 +188,30 @@ const GameList = () => {
                         </option>
                     ))}
                 </select>
+
+                <label className="ml-4">
+                    <input
+                        type="checkbox"
+                        checked={releasedOnly}
+                        onChange={(e) => {
+                            setReleasedOnly(e.target.checked);
+                        }}
+                        className="mr-2"
+                    />
+                    Released Only
+                </label>
+
+                <label className="ml-4">
+                    <input
+                        type="checkbox"
+                        checked={upcomingOnly}
+                        onChange={(e) => {
+                            setUpcomingOnly(e.target.checked);
+                        }}
+                        className="mr-2"
+                    />
+                    Upcoming Only
+                </label>
             </div>
 
             <div className="w-full max-w-3xl mt-6 space-y-4 overflow-y-auto">
@@ -191,23 +255,6 @@ const GameList = () => {
                         }
                     />
                 )}
-            </div>
-
-            <div className="flex gap-4 mt-6 mb-6">
-                <button
-                    disabled={page === 1}
-                    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                    className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 cursor-pointer"
-                >
-                    Previous
-                </button>
-                <button
-                    disabled={games.length < 10}
-                    onClick={() => setPage((prev) => prev + 1)}
-                    className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 cursor-pointer"
-                >
-                    Next
-                </button>
             </div>
         </div>
     );

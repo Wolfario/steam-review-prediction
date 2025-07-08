@@ -28,13 +28,6 @@ const GameCard = ({
         return "text-red-600";
     };
 
-    const getRatingLabel = (rating: number) => {
-        if (rating == 0) return "No Rating";
-        if (rating >= 75) return "Very Positive";
-        if (rating >= 50) return "Mixed";
-        return "Negative";
-    };
-
     return (
         <div
             onClick={onClick}
