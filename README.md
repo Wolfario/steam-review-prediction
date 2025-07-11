@@ -2,6 +2,7 @@
 
 A full-stack data-driven application that predicts user review scores for Steam games based on game metadata and user reviews.
 
+<img width="1237" height="792" alt="image" src="https://github.com/user-attachments/assets/2675c9ef-b623-4220-ad16-8d919213ab65" />
 <img width="1463" height="1145" alt="image" src="https://github.com/user-attachments/assets/c6dc70fc-6782-49fc-abaf-539df18c534f" />
 <img width="1276" height="597" alt="image" src="https://github.com/user-attachments/assets/7bd0e0c3-6f65-4c96-901d-7cd9bc296bf3" />
 
