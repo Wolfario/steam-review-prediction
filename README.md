@@ -2,6 +2,10 @@
 
 A full-stack data-driven application that predicts user review scores for Steam games based on game metadata and user reviews.
 
+<img width="1463" height="1145" alt="image" src="https://github.com/user-attachments/assets/c6dc70fc-6782-49fc-abaf-539df18c534f" />
+<img width="1276" height="597" alt="image" src="https://github.com/user-attachments/assets/7bd0e0c3-6f65-4c96-901d-7cd9bc296bf3" />
+
+
 ## 🧠 Overview
 
 This project combines data engineering, machine learning and modern web technologies to explore the relationship between user reviews, game genres and overall ratings. It features a complete data pipeline from raw Steam data to predictive analytics, and presents the results through an interactive web interface.
